@@ -21,6 +21,7 @@ def _unix_fallback_paths() -> list[Path]:
         Path("/usr/local/bin/ollama"),
         Path("/opt/homebrew/bin/ollama"),
         Path("/usr/bin/ollama"),
+        Path("/snap/bin/ollama"),
         Path.home() / ".local" / "bin" / "ollama",
     ]
 

@@ -30,13 +30,41 @@ def test_find_ollama_uses_fallback_when_which_fails(tmp_path):
         assert find_ollama_binary() == fake
 
 
-def test_windows_fallback_paths_contain_localappdata():
+def test_windows_fallback_paths_use_localappdata_when_present(monkeypatch):
+    monkeypatch.setenv("LOCALAPPDATA", r"D:\custom\appdata")
     paths = _windows_fallback_paths()
     joined = " ".join(str(p) for p in paths)
-    assert "Ollama" in joined
+    assert r"D:\custom\appdata" in joined or "D:/custom/appdata" in joined
 
 
-def test_unix_fallback_paths_contain_usr_local():
-    paths = _unix_fallback_paths()
+def test_windows_fallback_paths_use_program_files_when_present(monkeypatch):
+    monkeypatch.setenv("ProgramFiles", r"D:\custom\programfiles")
+    paths = _windows_fallback_paths()
     joined = " ".join(str(p) for p in paths)
-    assert "/usr/local/bin/ollama" in joined or "/opt/homebrew/bin/ollama" in joined
+    assert r"D:\custom\programfiles" in joined or "D:/custom/programfiles" in joined
+
+
+def test_unix_fallback_paths_include_homebrew_and_usr_local():
+    paths = [str(p) for p in _unix_fallback_paths()]
+    assert "/usr/local/bin/ollama" in paths
+    assert "/opt/homebrew/bin/ollama" in paths
+    assert "/snap/bin/ollama" in paths
+
+
+def test_candidate_fallbacks_picks_windows_branch_on_win():
+    from scripts.ollama_runtime import _candidate_fallbacks
+    with patch("scripts.ollama_runtime.sys") as fake_sys:
+        fake_sys.platform = "win32"
+        result = _candidate_fallbacks()
+    joined = " ".join(str(p) for p in result)
+    assert "Ollama" in joined
+    assert "/usr/local/bin/ollama" not in joined
+
+
+def test_candidate_fallbacks_picks_unix_branch_on_darwin():
+    from scripts.ollama_runtime import _candidate_fallbacks
+    with patch("scripts.ollama_runtime.sys") as fake_sys:
+        fake_sys.platform = "darwin"
+        result = _candidate_fallbacks()
+    joined = " ".join(str(p) for p in result)
+    assert "/usr/local/bin/ollama" in joined
