@@ -1,8 +1,5 @@
-import sys
 from pathlib import Path
 from unittest.mock import patch
-
-import pytest
 
 from scripts.ollama_runtime import find_ollama_binary, _windows_fallback_paths, _unix_fallback_paths
 
