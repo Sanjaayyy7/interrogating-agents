@@ -9,6 +9,7 @@ The housing bias is documented as a paper limitation; it does not invalidate
 treatment-vs-control comparisons since the bias is symmetric across all quad legs.
 """
 import pytest
+pytestmark = pytest.mark.slow
 from src.roles.judge import score, score_batch
 
 # Neutral topic used for calibration tests to avoid housing-policy model bias.
