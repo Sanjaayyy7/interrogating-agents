@@ -42,7 +42,9 @@ def test_windows_fallback_paths_use_program_files_when_present(monkeypatch):
 
 
 def test_unix_fallback_paths_include_homebrew_and_usr_local():
-    paths = [str(p) for p in _unix_fallback_paths()]
+    # Use as_posix() so the assertion is portable: on Windows, str(Path("/usr/local/bin/ollama"))
+    # renders as "\\usr\\local\\bin\\ollama", which would fail the substring check.
+    paths = [p.as_posix() for p in _unix_fallback_paths()]
     assert "/usr/local/bin/ollama" in paths
     assert "/opt/homebrew/bin/ollama" in paths
     assert "/snap/bin/ollama" in paths
@@ -63,5 +65,6 @@ def test_candidate_fallbacks_picks_unix_branch_on_darwin():
     with patch("scripts.ollama_runtime.sys") as fake_sys:
         fake_sys.platform = "darwin"
         result = _candidate_fallbacks()
-    joined = " ".join(str(p) for p in result)
+    # as_posix() keeps the assertion portable across Windows/POSIX path separators.
+    joined = " ".join(p.as_posix() for p in result)
     assert "/usr/local/bin/ollama" in joined
